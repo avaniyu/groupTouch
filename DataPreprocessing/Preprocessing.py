@@ -126,7 +126,7 @@ if __name__ == "__main__":
 							touchPairs[i].orientation,
 							touchPairs[i].distance,
 							touchPairs[i].time])
-	file.close()
+	fp.close()
 
 	# train a MLP in weka using leave-one-out nested cross validation
 
