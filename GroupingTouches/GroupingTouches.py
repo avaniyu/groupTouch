@@ -6,6 +6,12 @@ from xml.dom import minidom
 import csv
 import time as tm
 import datetime
+import tkinter as tk
+from tkinter import ttk
+
+root = tk.Tk()
+root.title("Group Touch Demo")
+root.geometry('990x520')
 
 class TouchPair:
 	def __init__(self, orientation, distance, time):
@@ -29,27 +35,7 @@ def MLP(paramTouchPair, paramCountPairing):
 	print(paramCountPairing)
 	return classification
 
-if __name__ == "__main__":
-	# read predictions from .csv
-	with open("1touchPairsFullInfo.csv", "r") as f:
-		reader = csv.reader(f)
-		next(reader, None)
-		predictionResults = list(reader)
-		# prediction = predictionResults[][6]
-
-	# read touch points from .xml
-	indexNow = 0
-	nameList = ["1 - Brainstorm", 
-				"2 - Heuristics", "3 - Heuristics", "4 - Heuristics", "5 - Heuristics", 
-				"6 - Map", "7 - Map", "8 - Map", "9 - Map",
-				"10 - Resources", "11 - Resources", "12 - Resources", "13 - Resources",
-				"14 - Wireframes", "15 - Wireframes", "16 - Wireframes", "17 - Wireframes"]
-	xmldoc = minidom.parse(nameList[indexNow]+".xml")
-	logs = xmldoc.getElementsByTagName('Point')
-
-	touchPoints = []
-	deltaTimeThreshold = 114275 # known from data preprocessing
-
+def demo(event):
 	countInvalidData = 0
 	for i in range(len(logs)):
 		if '?' in logs[i].attributes['student'].value and logs[i].attributes['student'].value == "":
@@ -139,3 +125,61 @@ if __name__ == "__main__":
 				lastPoints.append(touchPoints[i])
 				# flagNewUser = True
 				print("different")
+
+	print("demo()")
+
+def drawTouch(paramO, paramY, paramX):
+	rLong = 7
+	rShort = 5
+	paramAnchors = [paramX-rLong, paramY+rShort, paramX+rLong, paramY-rShort]
+	return paramAnchors
+
+def GUI():
+	frameUserIndicators = tk.Frame(root)
+	frameTableTop = tk.Canvas(root, borderwidth=2, relief=tk.GROOVE, width=651, height=419.4)
+	frameControlPanel = tk.Frame(root)
+	frameUserIndicators.grid(row=0, column=0)
+	frameTableTop.grid(row=1, column=0)
+	frameControlPanel.grid(row=0, rowspan=2, column=1)
+
+	# user indicators
+	indicatorUser1 = tk.Label(frameUserIndicators, text="User 1", anchor=tk.CENTER, 
+							padx=10, pady=10, foreground='white', background='green')
+	indicatorUser1.grid(row=0, column=0)
+
+	# live demo
+	anchors = drawTouch(0,100,100)
+	touchTest = frameTableTop.create_oval(anchors[0],anchors[1],anchors[2],anchors[3], fill='green', outline='grey')
+
+	# control panel
+	btnStart = tk.Button(frameControlPanel,text="Start", width=10)
+	btnStart.grid(row=0, column=0)
+	btnStart.bind('<ButtonRelease-1>', demo)
+
+if __name__ == "__main__":
+	# read predictions from .csv
+	with open("1touchPairsFullInfo.csv", "r") as f:
+		reader = csv.reader(f)
+		next(reader, None)
+		predictionResults = list(reader)
+		# prediction = predictionResults[][6]
+
+	# read touch points from .xml
+	indexNow = 0
+	nameList = ["1 - Brainstorm", 
+				"2 - Heuristics", "3 - Heuristics", "4 - Heuristics", "5 - Heuristics", 
+				"6 - Map", "7 - Map", "8 - Map", "9 - Map",
+				"10 - Resources", "11 - Resources", "12 - Resources", "13 - Resources",
+				"14 - Wireframes", "15 - Wireframes", "16 - Wireframes", "17 - Wireframes"]
+	xmldoc = minidom.parse(nameList[indexNow]+".xml")
+	logs = xmldoc.getElementsByTagName('Point')
+
+	touchPoints = []
+	deltaTimeThreshold = 114275 # known from data preprocessing
+
+	GUI()
+	root.mainloop()
+
+
+
+
