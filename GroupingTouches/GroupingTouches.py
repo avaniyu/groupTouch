@@ -32,10 +32,61 @@ def pair(touchPoint, lastPoint):
 
 def MLP(paramTouchPair, paramCountPairing):
 	classification = predictionResults[paramCountPairing][6]
-	print(paramCountPairing)
+	# print(paramCountPairing)
 	return classification
 
 def demo(event):
+	print("demo()")
+
+def drawTouch(paramO, paramY, paramX):
+	rLong = 7
+	rShort = 5
+	paramAnchors = [float(paramX)-rLong, float(paramY)+rShort, float(paramX)+rLong, float(paramY)-rShort]
+	return paramAnchors
+
+def GUI():
+	frameUserIndicators = tk.Frame(root)
+	frameTableTop = tk.Canvas(root, borderwidth=2, relief=tk.GROOVE, width=651, height=419.4)
+	frameControlPanel = tk.Frame(root)
+	frameUserIndicators.grid(row=0, column=0)
+	frameTableTop.grid(row=1, column=0)
+	frameControlPanel.grid(row=0, rowspan=2, column=1)
+
+	# user indicators
+	indicatorUser1 = tk.Label(frameUserIndicators, text="User 1", anchor=tk.CENTER, 
+							padx=10, pady=10, foreground='white', background='green')
+	indicatorUser1.grid(row=0, column=0)
+
+	# live demo
+	anchors = drawTouch(0,100,100)
+	touchTest = frameTableTop.create_oval(anchors[0],anchors[1],anchors[2],anchors[3], fill='green', outline='grey')
+
+	# control panel
+	btnStart = tk.Button(frameControlPanel,text="Start", width=10)
+	btnStart.grid(row=0, column=0)
+	btnStart.bind('<ButtonRelease-1>', demo)
+
+if __name__ == "__main__":
+	# read predictions from .csv
+	with open("1touchPairsFullInfo.csv", "r") as f:
+		reader = csv.reader(f)
+		next(reader, None)
+		predictionResults = list(reader)
+		# prediction = predictionResults[][6]
+
+	# read touch points from .xml
+	indexNow = 0
+	nameList = ["1 - Brainstorm", 
+				"2 - Heuristics", "3 - Heuristics", "4 - Heuristics", "5 - Heuristics", 
+				"6 - Map", "7 - Map", "8 - Map", "9 - Map",
+				"10 - Resources", "11 - Resources", "12 - Resources", "13 - Resources",
+				"14 - Wireframes", "15 - Wireframes", "16 - Wireframes", "17 - Wireframes"]
+	xmldoc = minidom.parse(nameList[indexNow]+".xml")
+	logs = xmldoc.getElementsByTagName('Point')
+
+	touchPoints = []
+	deltaTimeThreshold = 114275 # known from data preprocessing
+
 	countInvalidData = 0
 	for i in range(len(logs)):
 		if '?' in logs[i].attributes['student'].value and logs[i].attributes['student'].value == "":
@@ -112,7 +163,6 @@ def demo(event):
 						lastPoints[j] = touchPoints[i]
 						flagFirstUser = False
 						countDiff = 0
-						# flagNewUser = False
 						print("same")
 					elif classification == "different":
 						countDiff += 1
@@ -126,60 +176,5 @@ def demo(event):
 				# flagNewUser = True
 				print("different")
 
-	print("demo()")
-
-def drawTouch(paramO, paramY, paramX):
-	rLong = 7
-	rShort = 5
-	paramAnchors = [paramX-rLong, paramY+rShort, paramX+rLong, paramY-rShort]
-	return paramAnchors
-
-def GUI():
-	frameUserIndicators = tk.Frame(root)
-	frameTableTop = tk.Canvas(root, borderwidth=2, relief=tk.GROOVE, width=651, height=419.4)
-	frameControlPanel = tk.Frame(root)
-	frameUserIndicators.grid(row=0, column=0)
-	frameTableTop.grid(row=1, column=0)
-	frameControlPanel.grid(row=0, rowspan=2, column=1)
-
-	# user indicators
-	indicatorUser1 = tk.Label(frameUserIndicators, text="User 1", anchor=tk.CENTER, 
-							padx=10, pady=10, foreground='white', background='green')
-	indicatorUser1.grid(row=0, column=0)
-
-	# live demo
-	anchors = drawTouch(0,100,100)
-	touchTest = frameTableTop.create_oval(anchors[0],anchors[1],anchors[2],anchors[3], fill='green', outline='grey')
-
-	# control panel
-	btnStart = tk.Button(frameControlPanel,text="Start", width=10)
-	btnStart.grid(row=0, column=0)
-	btnStart.bind('<ButtonRelease-1>', demo)
-
-if __name__ == "__main__":
-	# read predictions from .csv
-	with open("1touchPairsFullInfo.csv", "r") as f:
-		reader = csv.reader(f)
-		next(reader, None)
-		predictionResults = list(reader)
-		# prediction = predictionResults[][6]
-
-	# read touch points from .xml
-	indexNow = 0
-	nameList = ["1 - Brainstorm", 
-				"2 - Heuristics", "3 - Heuristics", "4 - Heuristics", "5 - Heuristics", 
-				"6 - Map", "7 - Map", "8 - Map", "9 - Map",
-				"10 - Resources", "11 - Resources", "12 - Resources", "13 - Resources",
-				"14 - Wireframes", "15 - Wireframes", "16 - Wireframes", "17 - Wireframes"]
-	xmldoc = minidom.parse(nameList[indexNow]+".xml")
-	logs = xmldoc.getElementsByTagName('Point')
-
-	touchPoints = []
-	deltaTimeThreshold = 114275 # known from data preprocessing
-
 	GUI()
 	root.mainloop()
-
-
-
-
