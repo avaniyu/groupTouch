@@ -16,10 +16,10 @@ class TouchPair:
 
 # form a touch pair with 3 calculated features
 def pair(touchPoint, lastPoint, indexLastPoint):
-	orientation = (abs(float(touchPoint[1]) - float(lastPoint[1]))) % 1
+	orientation = round((abs(float(touchPoint[1]) - float(lastPoint[1]))) % 1, 5)
 	yDistance = abs(float(touchPoint[2]) - float(lastPoint[2]))
 	xDistance = abs(float(touchPoint[3]) - float(lastPoint[3]))
-	distance = np.sqrt(yDistance*yDistance + xDistance*xDistance) / 1557
+	distance = round(np.sqrt(yDistance*yDistance + xDistance*xDistance) / 1557, 3)
 	time = (touchPoint[4] - lastPoint[4])*1000
 	global deltaTimeList
 	deltaTimeList.append(time)
@@ -49,15 +49,20 @@ def pair(touchPoint, lastPoint, indexLastPoint):
 
 if __name__ == "__main__":
 	# read data from xml files
-	no = "2"
-	xmldoc = minidom.parse('2 - Heuristics.xml')
+	indexNow = 0
+	nameList = ["1 - Brainstorm", 
+				"2 - Heuristics", "3 - Heuristics", "4 - Heuristics", "5 - Heuristics", 
+				"6 - Map", "7 - Map", "8 - Map", "9 - Map",
+				"10 - Resources", "11 - Resources", "12 - Resources", "13 - Resources",
+				"14 - Wireframes", "15 - Wireframes", "16 - Wireframes", "17 - Wireframes"]
+	xmldoc = minidom.parse(nameList[indexNow]+".xml")
 	logs = xmldoc.getElementsByTagName('Point')
 	touchPoints = []
 	deltaTimeList = []
 	# remove outliers with elapsed time between touches above 80% of full dataset
 	# for i in range(300):
 	for i in range(len(logs)):
-		if '?' not in logs[i].attributes['student'].value:
+		if '?' not in logs[i].attributes['student'].value and logs[i].attributes['student'].value != "":
 			if i == 0:
 				tempTimeStr = logs[0].attributes['timestamp'].value
 				tempTimeFormat = datetime.datetime.strptime(tempTimeStr, "%Y/%m/%d %H:%M:%S:%f")
@@ -115,9 +120,9 @@ if __name__ == "__main__":
 			del touchPairs[i-countDel]
 			countDel += 1
 		else:
-			touchPairs[i-countDel].time = touchPairs[i-countDel].time / deltaTimeThreshold
+			touchPairs[i-countDel].time = round(touchPairs[i-countDel].time / deltaTimeThreshold, 5)
 
-	with open(no+"touchPairs.csv","a",newline="") as fp:
+	with open(nameList[indexNow]+"test.csv","a",newline="") as fp:
 		writer = csv.writer(fp, dialect='excel', delimiter=',',
                             quotechar='"', quoting=csv.QUOTE_ALL)
 		writer.writerow(["classification", "orientation", "distance", "time"])
@@ -128,4 +133,4 @@ if __name__ == "__main__":
 							touchPairs[i].time])
 	fp.close()
 
-	# train a MLP in weka using leave-one-out nested cross validation
+	# train MLP using leave-one-out nested cross validation in wek 3.8
