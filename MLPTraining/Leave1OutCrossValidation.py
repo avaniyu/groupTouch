@@ -1,7 +1,7 @@
 import csv
 
 if __name__ == "__main__":
-	index = 1
+	index = 3
 	with open("leave"+str(index)+"test.csv","a",newline="") as g:
 		writer = csv.writer(g, dialect='excel', delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 		writer.writerow(["classification", "orientation", "distance", "time"])
@@ -9,6 +9,7 @@ if __name__ == "__main__":
 			k = (index + i) % 17
 			if k == 0:
 				k = 17
+			print(k)
 			with open(str(k)+"touchPairs.csv", "r") as f:
 				reader = csv.reader(f)
 				next(reader, None)
