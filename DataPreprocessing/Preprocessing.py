@@ -8,14 +8,16 @@ import time as tm
 import datetime
 
 class TouchPair:
-	def __init__(self, classification, orientation, distance, time):
+	def __init__(self, classification, orientation, distance, time, paramIndexTouchPoint, paramIndexLastPoint):
 		self.classification = classification
 		self.orientation = orientation
 		self.distance = distance
 		self.time = time
+		self.paramIndexTouchPoint = paramIndexTouchPoint
+		self.paramIndexLastPoint = paramIndexLastPoint
 
 # form a touch pair with 3 calculated features
-def pair(touchPoint, lastPoint, indexLastPoint):
+def pair(touchPoint, lastPoint, indexInLast, indexTouch):
 	orientation = round((abs(float(touchPoint[1]) - float(lastPoint[1]))) % 1, 5)
 	yDistance = abs(float(touchPoint[2]) - float(lastPoint[2]))
 	xDistance = abs(float(touchPoint[3]) - float(lastPoint[3]))
@@ -23,10 +25,12 @@ def pair(touchPoint, lastPoint, indexLastPoint):
 	time = (touchPoint[4] - lastPoint[4])*1000
 	global deltaTimeList
 	deltaTimeList.append(time)
+
+	touchPoint[5] = indexTouch
 	global lastPoints
 	if touchPoint[0] == lastPoint[0]:
 		classification = "same"
-		lastPoints[indexLastPoint] = touchPoint
+		lastPoints[indexInLast] = touchPoint
 		# print("same")
 	else:
 		classification = "different"
@@ -43,7 +47,7 @@ def pair(touchPoint, lastPoint, indexLastPoint):
 	# 	print(lastPoint[0])
 	# 	print(lastPoints)
 	# print("------------------")
-	touchPair = TouchPair(classification, orientation, distance, time)
+	touchPair = TouchPair(classification, orientation, distance, time, indexTouch, lastPoint[5])
 	global touchPairs
 	touchPairs.append(touchPair)	
 
@@ -94,21 +98,24 @@ if __name__ == "__main__":
 	touchPairs = []
 
 	# initialize lastPoints with no.1 touchpoint
-	# list columns are in order of student, o, y, x, timestamp
+	# list columns are in order of student, o, y, x, timestamp, indexInTouchPoints
 	lastPoints = [[touchPoints[0][0],
 					touchPoints[0][1],
 					touchPoints[0][2],
 					touchPoints[0][3],
-					touchPoints[0][4]]]
+					touchPoints[0][4],
+					0]]
 
 	countDiff = 0
 
 	for i in range(1, len(touchPoints)):
+		print("---------")
+		print(touchPoints[i])
 		if len(lastPoints) == 1:
-			pair(touchPoints[i], lastPoints[0], 0)
+			pair(touchPoints[i], lastPoints[0], 0, i)
 		else:
 			for j in range(len(lastPoints)):
-				pair(touchPoints[i], lastPoints[j], j)
+				pair(touchPoints[i], lastPoints[j], j, i)
 
 	# normalize time feature and delete outliers
 	deltaTimeList = sorted(deltaTimeList, reverse=True)
@@ -122,15 +129,17 @@ if __name__ == "__main__":
 		else:
 			touchPairs[i-countDel].time = round(touchPairs[i-countDel].time / deltaTimeThreshold, 5)
 
-	with open(nameList[indexNow]+"test.csv","a",newline="") as fp:
+	with open(nameList[indexNow]+" - touchPairs.csv","a",newline="") as fp:
 		writer = csv.writer(fp, dialect='excel', delimiter=',',
                             quotechar='"', quoting=csv.QUOTE_ALL)
-		writer.writerow(["classification", "orientation", "distance", "time"])
+		writer.writerow(["classification", "orientation", "distance", "time", "indexTouchPoint", "indexLastPoint"])
 		for i in range(len(touchPairs)):
 			writer.writerow([touchPairs[i].classification,
 							touchPairs[i].orientation,
 							touchPairs[i].distance,
-							touchPairs[i].time])
+							touchPairs[i].time,
+							touchPairs[i].paramIndexTouchPoint,
+							touchPairs[i].paramIndexLastPoint])
 	fp.close()
 
 	# train MLP using leave-one-out nested cross validation in wek 3.8
