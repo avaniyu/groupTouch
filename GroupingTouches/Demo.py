@@ -58,15 +58,16 @@ class Demo(tk.Frame):
 		# control frame
 		self.btnStart = tk.Button(self.frameControlPanel, text="Start", width=10)
 		self.btnStart.grid(row=0, column=0)
-		self.btnStart.bind('<Button-1>', self.groupTouch)
+		self.btnStart.bind('<ButtonPress-1>', self.groupTouches)
 
 		# PixelSense tabletop
 		self.tabletop = tk.Canvas(self.frameTableTop, borderwidth=2, relief=tk.GROOVE, width=651, height=419.4)
 		self.tabletop.grid(row=0, column=0)
 
-	def groupTouch(self, event):
+	def groupTouches(self, event):
 
 		# read all logs into self.allTouchPoints[][]
+		# in order of 0 index, 1 o, 2 y, 3 x, 4 thisTime, 5 deltaTime
 		countInvalidData = 0
 		for i in range(len(self.logs)):
 			if '?' in self.logs[i].attributes['student'].value and self.logs[i].attributes['student'].value == "":
@@ -88,21 +89,40 @@ class Demo(tk.Frame):
 											self.logs[i].attributes['x'].value,
 											thisTime,
 											deltaTime])
-		
 
-		self.drawTouch(0, 100, 100)
+		self.count = 0
+		self.groupTouch()
+
+		# for i in range(len(self.allTouchPoints)):
+		# 	if self.allTouchPoints[i][5] > self.deltaTimeThreshold:
+		# 		self.frameTableTop.after(100, self.drawTouch(
+		# 								self.allTouchPoints[i][1], self.allTouchPoints[i][2], 
+		# 								self.allTouchPoints[i][3], 'grey50'))
+				
+
+		self.drawTouch(0, 100, 100, 'green')
+
+	def groupTouch(self):
+		if self.count < len(self.allTouchPoints):
+			self.drawTouch(self.allTouchPoints[self.count][1], self.allTouchPoints[self.count][2],
+							self.allTouchPoints[self.count][3], 'grey50')
+			self.frameTableTop.update()
+			self.frameTableTop.after(int(self.allTouchPoints[self.count+1][5]/10000), self.groupTouch)
+			# print(self.allTouchPoints[self.count][1])
+			self.count += 1
 
 	def MLP(self, paramCountPairing):
 		classification = self.predictionResults[paramCountPairing][6]
 		return classification
 
-	def drawTouch(self, paramO, paramY, paramX):
-		rLong = 7
-		rShort = 5
-		anchors = [float(paramX)-rLong, float(paramY)+rShort, 
-						float(paramX)+rLong, float(paramY)-rShort]
+	def drawTouch(self, paramO, paramY, paramX, paramColor):
+		rLong = 14
+		rShort = 10
+		anchors = [(float(paramX)-rLong)/5, (float(paramY)+rShort)/5, 
+						(float(paramX)+rLong)/5, (float(paramY)-rShort)/5]
 		self.tabletop.create_oval(anchors[0], anchors[1], anchors[2], anchors[3],
-									fill=self.colors[0], outline='grey')
+									fill=paramColor, outline='grey')
+		print(anchors)
 
 if __name__ == "__main__":
     root = tk.Tk()
