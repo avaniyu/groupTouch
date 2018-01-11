@@ -1,3 +1,6 @@
+# Jan 11, 2018
+# by Jiayao Yu
+
 import numpy as np 
 %matplotlib inline
 import matplotlib
@@ -30,10 +33,12 @@ class Demo(tk.Frame):
 					"14 - Wireframes", "15 - Wireframes", "16 - Wireframes", "17 - Wireframes"]
 		xmldoc = minidom.parse(nameList[indexNow]+".xml")
 		self.logs = xmldoc.getElementsByTagName('Point')
-		self.touchPoints = []
+		self.allTouchPoints = []
+		self.touchPoints = []	# removed outliers on elapsed time
 		self.deltaTimeThreshold = 114275 # known from data preprocessing
 
 	def GUI(self):
+		self.colors = ['red', 'blue', 'yellow', 'green', 'grey', 'black', 'white', 'cyan']
 		self.frameUserIndicator = tk.Canvas(self)
 		self.frameControlPanel = tk.Canvas(self)
 		self.frameTableTop = tk.Canvas(self)
@@ -47,7 +52,7 @@ class Demo(tk.Frame):
 		self.userIndicators = [0 for i in range(amountUsers)]
 		for i in range(amountUsers):
 			self.userIndicators[i] = tk.Label(self.frameUserIndicator, 
-									text="User "+str(i+1), background='green', foreground='white')
+									text="User "+str(i+1), background=self.colors[i], foreground='white')
 			self.userIndicators[i].grid(row=0, column=i)
 
 		# control frame
@@ -60,6 +65,31 @@ class Demo(tk.Frame):
 		self.tabletop.grid(row=0, column=0)
 
 	def groupTouch(self, event):
+
+		# read all logs into self.allTouchPoints[][]
+		countInvalidData = 0
+		for i in range(len(self.logs)):
+			if '?' in self.logs[i].attributes['student'].value and self.logs[i].attributes['student'].value == "":
+				countInvalidData += 1
+			else:
+				if i+countInvalidData == 0:
+					tempTimeStr = self.logs[0].attributes['timestamp'].value
+					tempTimeFormat = datetime.datetime.strptime(tempTimeStr, "%Y/%m/%d %H:%M:%S:%f")
+					tempTime = tm.mktime(tempTimeFormat.timetuple())+(tempTimeFormat.microsecond/1000000.0)
+					thisTime = tempTime
+				else:
+					thisTimeStr = self.logs[i].attributes['timestamp'].value
+					thisTimeFormat = datetime.datetime.strptime(thisTimeStr, "%Y/%m/%d %H:%M:%S:%f")
+					thisTime = tm.mktime(thisTimeFormat.timetuple())+(thisTimeFormat.microsecond/1000000.0)
+				deltaTime = (thisTime - tempTime)*1000
+				index = i - countInvalidData
+				self.allTouchPoints.append([index, self.logs[i].attributes['o'].value,
+											self.logs[i].attributes['y'].value,
+											self.logs[i].attributes['x'].value,
+											thisTime,
+											deltaTime])
+		
+
 		self.drawTouch(0, 100, 100)
 
 	def MLP(self, paramCountPairing):
@@ -72,7 +102,7 @@ class Demo(tk.Frame):
 		anchors = [float(paramX)-rLong, float(paramY)+rShort, 
 						float(paramX)+rLong, float(paramY)-rShort]
 		self.tabletop.create_oval(anchors[0], anchors[1], anchors[2], anchors[3],
-									fill='green', outline='grey')
+									fill=self.colors[0], outline='grey')
 
 if __name__ == "__main__":
     root = tk.Tk()
