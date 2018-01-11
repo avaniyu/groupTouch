@@ -1,5 +1,3 @@
-import tkinter as tk
-from tkinter import ttk 
 import numpy as np 
 %matplotlib inline
 import matplotlib
@@ -8,6 +6,8 @@ from xml.dom import minidom
 import csv
 import time as tm
 import datetime
+import tkinter as tk
+from tkinter import ttk 
 
 class Demo(tk.Frame):
 
@@ -59,15 +59,20 @@ class Demo(tk.Frame):
 		self.tabletop = tk.Canvas(self.frameTableTop, borderwidth=2, relief=tk.GROOVE, width=651, height=419.4)
 		self.tabletop.grid(row=0, column=0)
 
-	def groupTouch(event):
-		print("groupTouch()")
+	def groupTouch(self, event):
+		self.drawTouch(0, 100, 100)
 
-	def MLP(paramCountPairing):
+	def MLP(self, paramCountPairing):
 		classification = self.predictionResults[paramCountPairing][6]
 		return classification
 
-	def drawTouch():
-		print("drawTouch()")
+	def drawTouch(self, paramO, paramY, paramX):
+		rLong = 7
+		rShort = 5
+		anchors = [float(paramX)-rLong, float(paramY)+rShort, 
+						float(paramX)+rLong, float(paramY)-rShort]
+		self.tabletop.create_oval(anchors[0], anchors[1], anchors[2], anchors[3],
+									fill='green', outline='grey')
 
 if __name__ == "__main__":
     root = tk.Tk()
